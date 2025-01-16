@@ -77,24 +77,22 @@ app.post('/login', async (req, res) => {
         res.status(400).send('Username is required');
     else if (!password || password == '')
         res.status(400).send('Password is required');
+    else if (!isExists)
+        res.status(404).send('Username does not exist');
     else{
-        if (isExists) {
-            const isValidCradentials = await login(username, password)
-            console.log(`isValid: ${isValidCradentials}`);
-            if (isValidCradentials){
-                console.log('valid');
-                const userId = getUserId(username);
-                const token = jwt.sign({ id: userId }, SECRET_KEY, { expiresIn: '1h' });
-                res.status(200).json({ token });
-            } else {
-                console.log('not valid');
-                res.status(401).send('Username or password is incorrect');
-            }
+        const isValidCradentials = await login(username, password)
+        console.log(`isValid: ${isValidCradentials}`);
+        if (isValidCradentials){
+            console.log('valid');
+            const userId = getUserId(username);
+            const token = jwt.sign({ id: userId }, SECRET_KEY, { expiresIn: '1h' });
+            res.status(200).json({ token });
         } else {
-            res.status(404).send('Username does not exist');
+            console.log('not valid');
+            res.status(401).send('Username or password is incorrect');
         }
     }
-  });
+});
 
 //Register Endpoint  
 app.post('/register',async (req, res) => {
@@ -108,16 +106,15 @@ app.post('/register',async (req, res) => {
         const isAlreadyExists = await usernameExists(username);
         if (isAlreadyExists)
             res.status(409).send('Username already exists');
-        else{           
-            try{
-                const saltRounds = 10;
-                const hashedPassword = await bcrypt.hash(password, saltRounds);
-                signIn(username  , hashedPassword);
-                res.status(201).send('successfully registered');
-            } catch (err) {
-                console.error('Error hashing password:', err);
-                res.status(500).send('Error hashing password' );
-            }
+
+        try{
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(password, saltRounds);
+            signIn(username  , hashedPassword);
+            res.status(201).send('successfully registered');
+        } catch (err) {
+            console.error('Error hashing password:', err);
+            res.status(500).send('Error hashing password' );
         }
     }
         

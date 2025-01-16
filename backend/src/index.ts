@@ -104,6 +104,31 @@ async function getPlaylist(username: string, playlistName: string){
 }
 
 /**
+ * getting the list of playlists of a specific user
+ * @param username 
+ * @returns the playlists
+ */
+async function getPlaylistsOfUser(username: string){
+  const userIdResult = await getUserId(username)
+
+  if(userIdResult.length === 0) // user not found
+    return;
+
+  const userId = userIdResult[0].id;
+
+  const playlists = await db
+    .select({
+      id: playlistTable.id,
+      name: playlistTable.name,
+    })
+    .from(playlistTable)
+    .where(eq(playlistTable.userId, userId));
+
+  return playlists;
+}
+
+
+/**
  * 
  * @param username - name of the user the playlist belongs to
  * @param playlistName - new playlist name
@@ -253,5 +278,6 @@ module.exports = {
   deletePlaylist, 
   addSongToPlaylist, 
   removeSongToPlaylist,
+  getPlaylistsOfUser
 };
 
